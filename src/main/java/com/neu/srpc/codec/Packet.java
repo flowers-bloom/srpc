@@ -21,5 +21,5 @@ public abstract class Packet implements Serializable {
      * 获取类的 class
      * @return
      */
-    protected abstract Class<? extends Packet> getClazz();
+    public abstract Class<? extends Packet> getClazz();
 }

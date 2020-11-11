@@ -1,9 +1,9 @@
 package com.neu.srpc.server;
 
-import com.neu.common.SimpleCompute;
 import com.neu.srpc.protocol.Request;
 import com.neu.srpc.protocol.Response;
 import io.netty.channel.ChannelHandlerContext;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
 
@@ -12,12 +12,22 @@ import java.lang.reflect.Method;
  * @Date 2020/11/10
  * @Description
  */
+@Slf4j
 public class ServerStub {
+    private RpcServer server;
+
+    public ServerStub(RpcServer server) {
+        this.server = server;
+    }
+
+
+    @SuppressWarnings("unchecked")
     public void process(ChannelHandlerContext ctx, Request request) {
+        Class clazz = server.discoverService(request.getInterfaceClazz());
 
-
-        // TODO: 寻找接口的实现类
-        Class clazz = SimpleCompute.class;
+        if (clazz == null) {
+            log.error("{} service has not register", request.getInterfaceClazz());
+        }
 
         try {
             Method method = clazz.getMethod(request.getMethodName(), request.getParameterTypes());

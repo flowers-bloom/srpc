@@ -10,10 +10,10 @@ import com.neu.srpc.codec.Serializer;
  */
 public class Test {
     public static void main(String[] args) {
-        String s = "xiao 123";
-        Serializer serializer = new FastJsonImpl();
+        String point = "123:44";
 
-        byte[] bytes = serializer.deserialize(s);
-        System.out.println(bytes.length);
+        int sep = point.indexOf(':');
+        System.out.println(point.substring(sep+1));
+        //this.port = Integer.parseInt(point.substring(sep+1));
     }
 }

@@ -3,6 +3,7 @@ package com.neu.srpc.protocol;
 import com.neu.srpc.codec.Packet;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 /**
@@ -11,17 +12,18 @@ import lombok.NoArgsConstructor;
  * @Description
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
 @NoArgsConstructor
 public class Request extends Packet {
     private long id;
-    private String clazzName;
+    private Class interfaceClazz;
     private String methodName;
     private Class[] parameterTypes;
     private Object[] parameters;
 
     @Override
-    protected Class<? extends Packet> getClazz() {
+    public Class<? extends Packet> getClazz() {
         return Request.class;
     }
 }

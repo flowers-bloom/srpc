@@ -18,11 +18,10 @@ import java.util.concurrent.CompletableFuture;
  */
 @Slf4j
 public class ClientStub {
-    private NettyClient nettyClient;
+    private RpcClient rpcClient;
 
-    public ClientStub() {
-        nettyClient = new NettyClient("127.0.0.1", 8000);
-        nettyClient.connect();
+    public ClientStub(RpcClient rpcClient) {
+        this.rpcClient = rpcClient;
     }
 
     /**
@@ -32,6 +31,7 @@ public class ClientStub {
      * @param <T>
      * @return
      */
+    @SuppressWarnings("unchecked")
     public <T> T getStub(Class<T> clazz) {
         InvocationHandler h = (proxy, method, args) -> {
             Request request = new Request();
@@ -39,18 +39,18 @@ public class ClientStub {
             long id = System.currentTimeMillis();
 
             request.setId(id);
-            request.setClazzName(clazz.getName());
+            request.setInterfaceClazz(clazz);
             request.setMethodName(method.getName());
             request.setParameterTypes(method.getParameterTypes());
             request.setParameters(args);
 
             CompletableFuture<Response> future = new CompletableFuture<>();
-            Constant.map.put(id, future);
+            Constant.ID_FUTURE_MAP.put(id, future);
 
-            nettyClient.send(request);
+            rpcClient.send(request);
 
             Response response = future.get();
-            Constant.map.remove(id);
+            Constant.ID_FUTURE_MAP.remove(id);
 
             return response.getObject();
         };

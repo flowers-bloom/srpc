@@ -10,6 +10,6 @@ import lombok.Data;
  */
 @Data
 public class ServerConfig {
-    private Class<? extends TransportServer> transportClass = NettyServer.class;
+    private Class<? extends TransportServer> transportClass = RpcServer.class;
     private int port = 8000;
 }

@@ -1,11 +1,10 @@
 package com.neu.srpc.server;
 
-import com.neu.common.SimpleCompute;
+import com.neu.common.Constant;
 import com.neu.srpc.codec.Decoder;
 import com.neu.srpc.codec.Encoder;
-import com.neu.srpc.handler.ServerRequestHandler;
-import com.neu.srpc.protocol.Request;
-import com.neu.srpc.protocol.Response;
+import com.neu.srpc.handler.InvokeRequestHandler;
+import com.neu.srpc.registry.ServiceManager;
 import com.neu.srpc.transport.TransportServer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -15,9 +14,10 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.reflect.Method;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @Author XJH
@@ -25,20 +25,44 @@ import java.lang.reflect.Method;
  * @Description
  */
 @Slf4j
-public class NettyServer implements TransportServer {
+public class RpcServer implements TransportServer {
     private NioEventLoopGroup bossGroup;
     private NioEventLoopGroup workerGroup;
     private ServerBootstrap bootstrap;
     private ChannelFuture future;
     private ServerStub serverStub;
+    public ServiceManager serviceManager;
     private int port;
 
-    public NettyServer(int port) {
+    public RpcServer(int port) {
         this.bossGroup = new NioEventLoopGroup(1);
         this.workerGroup = new NioEventLoopGroup();
         this.bootstrap = new ServerBootstrap();
-        this.serverStub = new ServerStub();
+        this.serverStub = new ServerStub(this);
+        this.serviceManager = new ServiceManager();
         this.port = port;
+
+        bind();
+    }
+
+    /**
+     * 向服务注册表注册服务
+     *
+     * @param interfaceClass
+     * @param serviceClass
+     */
+    public void serviceRegister(Class interfaceClass, Class serviceClass) {
+        Constant.SERVICE_MAP.put(interfaceClass, serviceClass);
+    }
+
+    /**
+     * 查询服务注册表，获取接口的实现类
+     *
+     * @param interfaceClass
+     * @return
+     */
+    public Class discoverService(Class interfaceClass) {
+        return Constant.SERVICE_MAP.get(interfaceClass);
     }
 
     /**
@@ -59,7 +83,13 @@ public class NettyServer implements TransportServer {
 
                             pipeline.addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 2, 4));
                             pipeline.addLast(new Decoder());
-                            pipeline.addLast(new ServerRequestHandler(serverStub));
+                            pipeline.addLast(new IdleStateHandler(
+                                    Constant.READ_IDLE_TIME,
+                                    Constant.WRITE_IDLE_TIME,
+                                    Constant.ALL_IDLE_TIME,
+                                    TimeUnit.SECONDS
+                            ));
+                            pipeline.addLast(new InvokeRequestHandler(serverStub));
                             pipeline.addLast(new Encoder());
                         }
                     })

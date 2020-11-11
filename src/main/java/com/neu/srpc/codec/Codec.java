@@ -1,6 +1,5 @@
 package com.neu.srpc.codec;
 
-import com.neu.srpc.protocol.Msg;
 import com.neu.srpc.protocol.Request;
 import com.neu.srpc.protocol.Response;
 import io.netty.buffer.ByteBuf;
@@ -40,8 +39,6 @@ public class Codec {
             return 1;
         }else if (clazz == Response.class) {
             return 2;
-        }else if (clazz == Msg.class) {
-            return 3;
         }else {
             throw new RuntimeException("unknown class type");
         }
@@ -52,8 +49,6 @@ public class Codec {
             return Request.class;
         }else if (b == 2) {
             return Response.class;
-        }else if (b == 3) {
-            return Msg.class;
         }else {
             throw new RuntimeException("unknown int value");
         }

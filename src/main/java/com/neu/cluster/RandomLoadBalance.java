@@ -1,4 +1,4 @@
-package com.neu.srpc.registry;
+package com.neu.cluster;
 
 import java.util.Random;
 
@@ -7,7 +7,7 @@ import java.util.Random;
  * @Date 2020/11/07
  * @Description 随机负载均衡
  */
-public class RandomLoadBanlance extends LoadBalance {
+public class RandomLoadBalance extends LoadBalance {
     private static Random random = new Random();
 
     @Override

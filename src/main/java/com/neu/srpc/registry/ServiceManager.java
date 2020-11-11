@@ -1,74 +1,99 @@
 package com.neu.srpc.registry;
 
+import com.neu.cluster.LoadBalance;
+import com.neu.common.Constant;
+import com.neu.common.Endpoint;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.Stat;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * @Author XJH
  * @Date 2020/11/07
- * @Description 服务管理类，实现服务注册，服务发现功能
+ * @Description 注册中心管理类
  */
+@Slf4j
 public class ServiceManager {
-    private static final String ROOT_SERVICE = "/srpc";
-    private static final String LOCAL_ADDR = "127.0.0.1:2181";
-    private static final int SESSION_TIMEOUT = 5000;
-    private static ZooKeeper zooKeeper;
+    private final String ROOT_SERVICE = Constant.ZK_ROOT_SERVICE;
+    private final String LOCAL_ADDR = Constant.ZK_ADDR;
+    private final int SESSION_TIMEOUT = Constant.ZK_SESSION_TIMEOUT;
+    private ZooKeeper zooKeeper;
 
-    public static void register(String serviceName, String ip, int port) {
+    public ServiceManager() {
         try {
-            zooKeeper = new ZooKeeper(LOCAL_ADDR, SESSION_TIMEOUT, watchedEvent -> {});
+            zooKeeper = new ZooKeeper(LOCAL_ADDR, SESSION_TIMEOUT, watchedEvent -> { });
 
             Stat exists = zooKeeper.exists(ROOT_SERVICE, false);
             if (exists == null) {
                 zooKeeper.create(ROOT_SERVICE, "".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
             }
-
-
-            String path = ROOT_SERVICE + serviceName, addr = ip + ":" + port;
-            zooKeeper.create(path, addr.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-
-            System.out.println("服务注册完成");
-        } catch (IOException | InterruptedException | KeeperException e) {
-            e.printStackTrace();
+        } catch (IOException | KeeperException | InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    public static void discover(String serviceName) {
+    /**
+     * 注册服务
+     *
+     * @param serviceName
+     * @param ip
+     * @param port
+     */
+    public void register(String serviceName, String ip, int port) {
         try {
-            String path = ROOT_SERVICE + serviceName;
+            String path = ROOT_SERVICE + "/" + serviceName;
+            String point = ip + ":" + port;
 
-            zooKeeper = new ZooKeeper(LOCAL_ADDR, SESSION_TIMEOUT, watchedEvent -> {
-                if (watchedEvent.getPath().equals(path) &&
-                watchedEvent.getType() == Watcher.Event.EventType.NodeChildrenChanged) {
-                    System.out.println("zk 注册信息发生改变，更新服务注册表");
-                    updateServiceList(path);
-                }
-            });
-
-            updateServiceList(path);
-        } catch (IOException e) {
-            e.printStackTrace();
+            Stat exists1 = zooKeeper.exists(path, false);
+            if (exists1 == null) {
+                zooKeeper.create(path, point.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+                log.info("服务 {} 注册成功, 地址 {}:{} ", ip, port);
+            }else {
+                log.info("服务 {} 已注册, 地址 {}:{} ", ip, port);
+            }
+        } catch (InterruptedException | KeeperException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    private static void updateServiceList(String path) {
-        List<String> list = new ArrayList<>();
+    /**
+     * 服务发现
+     */
+    public void discover() {
+        updateServiceList(ROOT_SERVICE);
+    }
+
+    /**
+     * 更新服务列表
+     *
+     * @param path
+     */
+    public void updateServiceList(String path) {
+        List<Endpoint> list = Collections.synchronizedList(new ArrayList<>());
 
         try {
-            List<String> children = zooKeeper.getChildren(path, true);
+            List<String> children = zooKeeper.getChildren(path,
+                    new ChildrenWatcher(path, this));
+            log.info("children = {}", children);
+
             for (String child : children) {
                 byte[] data = zooKeeper.getData(path + "/" + child, false, null);
-                list.add(new String(data, "utf-8"));
+                list.add(new Endpoint(new String(data, "utf-8")));
             }
 
             LoadBalance.SERVICE_LIST = list;
         } catch (InterruptedException | KeeperException | UnsupportedEncodingException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
+    }
+
+    public ZooKeeper getZooKeeper() {
+        return zooKeeper;
     }
 }
