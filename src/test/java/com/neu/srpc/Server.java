@@ -12,10 +12,16 @@ import com.neu.srpc.server.RpcServer;
  */
 public class Server {
     public static void main(String[] args) {
-        RpcServer server = new RpcServer(9001);
+        int port = 9000;
+        String serviceName = "compute";
+        String ip = "127.0.0.1";
 
+        RpcServer server = new RpcServer(port);
+
+        // 注册接口及实现类
         server.serviceRegister(Compute.class, SimpleCompute.class);
-        server.serviceManager.register("other",
-                "127.0.0.1", 9001);
+
+        // 注册服务
+        server.serviceManager.register(serviceName, ip, port);
     }
 }

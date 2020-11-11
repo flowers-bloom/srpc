@@ -5,7 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 /**
  * @Author XJH
  * @Date 2020/11/02
- * @Description
+ * @Description FastJson 序列化
  */
 public class FastJsonImpl implements Serializer {
     public static Serializer serializer = new FastJsonImpl();

@@ -10,12 +10,14 @@ import java.util.List;
 /**
  * @Author XJH
  * @Date 2020/11/02
- * @Description
+ * @Description 解码器
  */
 public class Decoder extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list) throws Exception {
-        list.add(Codec.decode(byteBuf));
+        if (byteBuf.readableBytes() > 0) {
+            list.add(Codec.decode(byteBuf));
+        }
     }
 }

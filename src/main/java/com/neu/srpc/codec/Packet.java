@@ -7,7 +7,7 @@ import java.io.Serializable;
 /**
  * @Author XJH
  * @Date 2020/11/02
- * @Description
+ * @Description 数据包
  */
 @Data
 public abstract class Packet implements Serializable {

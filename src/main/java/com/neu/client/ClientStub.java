@@ -14,7 +14,6 @@ import java.util.concurrent.CompletableFuture;
  * @Date 2020/11/10
  * @Description 客户端存根
  *
- * TODO: 客户端选择端点进行连接
  */
 @Slf4j
 public class ClientStub {
@@ -25,14 +24,14 @@ public class ClientStub {
     }
 
     /**
-     * 获取客户端存根
+     * 获取动态代理对象，并实现远程调用方法的内部逻辑
      *
      * @param clazz
      * @param <T>
      * @return
      */
     @SuppressWarnings("unchecked")
-    public <T> T getStub(Class<T> clazz) {
+    public <T> T getProxy(Class<T> clazz) {
         InvocationHandler h = (proxy, method, args) -> {
             Request request = new Request();
 

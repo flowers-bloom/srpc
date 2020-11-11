@@ -41,7 +41,7 @@ public class ServiceManager {
     /**
      * 注册服务
      *
-     * @param serviceName
+     * @param serviceName 服务名
      * @param ip
      * @param port
      */

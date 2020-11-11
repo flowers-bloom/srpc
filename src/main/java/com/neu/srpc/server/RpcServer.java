@@ -15,6 +15,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.util.internal.ObjectUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.TimeUnit;
@@ -52,6 +53,9 @@ public class RpcServer implements TransportServer {
      * @param serviceClass
      */
     public void serviceRegister(Class interfaceClass, Class serviceClass) {
+        ObjectUtil.checkNotNull(interfaceClass, "interfaceClass");
+        ObjectUtil.checkNotNull(serviceClass, "interfaceClass");
+
         Constant.SERVICE_MAP.put(interfaceClass, serviceClass);
     }
 
@@ -62,6 +66,8 @@ public class RpcServer implements TransportServer {
      * @return
      */
     public Class discoverService(Class interfaceClass) {
+        ObjectUtil.checkNotNull(interfaceClass, "interfaceClass");
+
         return Constant.SERVICE_MAP.get(interfaceClass);
     }
 

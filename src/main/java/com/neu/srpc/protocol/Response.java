@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 /**
  * @Author XJH
  * @Date 2020/11/07
- * @Description
+ * @Description 方法调用结果响应
  */
 @Data
 @EqualsAndHashCode(callSuper = false)

@@ -5,7 +5,7 @@ import lombok.Data;
 /**
  * @Author XJH
  * @Date 2020/11/08
- * @Description
+ * @Description 可用的服务端点
  */
 @Data
 public class Endpoint {

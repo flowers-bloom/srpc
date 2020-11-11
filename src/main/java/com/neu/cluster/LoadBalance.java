@@ -12,5 +12,10 @@ import java.util.List;
 public abstract class LoadBalance {
     public static List<Endpoint> SERVICE_LIST;
 
+    /**
+     * 以特定算法选出一个端点 Endpoint
+     *
+     * @return
+     */
     public abstract Endpoint select();
 }

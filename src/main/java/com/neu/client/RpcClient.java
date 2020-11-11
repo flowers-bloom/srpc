@@ -79,7 +79,7 @@ public class RpcClient implements TransportClient {
 
                             pipeline.addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 2, 4));
                             pipeline.addLast(new Decoder());
-                            pipeline.addLast(new InvokeResponseHandler(RpcClient.this));
+                            pipeline.addLast(new InvokeResponseHandler());
                             pipeline.addLast(new Encoder());
                         }
                     });
@@ -102,13 +102,13 @@ public class RpcClient implements TransportClient {
     }
 
     /**
-     * 获取客户端存根
+     * 获取动态代理对象
      *
      * @param clazz
      * @param <T>
      * @return
      */
-    public <T> T getStub(Class<T> clazz) {
-        return clientStub.getStub(clazz);
+    public <T> T getProxy(Class<T> clazz) {
+        return clientStub.getProxy(clazz);
     }
 }

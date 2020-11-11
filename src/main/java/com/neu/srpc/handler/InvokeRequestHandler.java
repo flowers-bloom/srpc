@@ -15,7 +15,7 @@ import java.net.SocketAddress;
 /**
  * @Author XJH
  * @Date 2020/11/06
- * @Description
+ * @Description 方法调用请求的回调处理
  */
 @Slf4j
 public class InvokeRequestHandler extends SimpleChannelInboundHandler<Request> {
@@ -38,6 +38,13 @@ public class InvokeRequestHandler extends SimpleChannelInboundHandler<Request> {
         serverStub.process(ctx, request);
     }
 
+    /**
+     * 心跳检测处理
+     *
+     * @param ctx
+     * @param evt
+     * @throws Exception
+     */
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof IdleStateEvent) {
