@@ -3,6 +3,8 @@ package com.neu.client;
 import com.neu.common.Constant;
 import com.neu.srpc.protocol.Request;
 import com.neu.srpc.protocol.Response;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationHandler;
@@ -43,12 +45,19 @@ public class ClientStub {
             request.setParameterTypes(method.getParameterTypes());
             request.setParameters(args);
 
-            CompletableFuture<Response> future = new CompletableFuture<>();
-            Constant.ID_FUTURE_MAP.put(id, future);
+            CompletableFuture<Response> completableFuture = new CompletableFuture<>();
+            Constant.ID_FUTURE_MAP.put(id, completableFuture);
 
-            rpcClient.send(request);
+            ChannelFuture future = rpcClient.send(request);
+            future.addListener((ChannelFutureListener) future1 -> {
+                if (future1.isSuccess()) {
+                    log.info("client send {} success.", request);
+                }else {
+                    log.info("client send {} failed.", request);
+                }
+            });
 
-            Response response = future.get();
+            Response response = completableFuture.get();
             Constant.ID_FUTURE_MAP.remove(id);
 
             return response.getObject();

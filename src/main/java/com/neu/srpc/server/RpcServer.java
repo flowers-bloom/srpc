@@ -89,12 +89,12 @@ public class RpcServer implements TransportServer {
 
                             pipeline.addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 2, 4));
                             pipeline.addLast(new Decoder());
-                            pipeline.addLast(new IdleStateHandler(
-                                    Constant.READ_IDLE_TIME,
-                                    Constant.WRITE_IDLE_TIME,
-                                    Constant.ALL_IDLE_TIME,
-                                    TimeUnit.SECONDS
-                            ));
+//                            pipeline.addLast(new IdleStateHandler(
+//                                    Constant.READ_IDLE_TIME,
+//                                    0,
+//                                    0,
+//                                    TimeUnit.SECONDS
+//                            ));
                             pipeline.addLast(new InvokeRequestHandler(serverStub));
                             pipeline.addLast(new Encoder());
                         }

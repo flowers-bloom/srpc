@@ -2,6 +2,7 @@ package com.neu.srpc.handler;
 
 import com.neu.common.Constant;
 import com.neu.srpc.protocol.Response;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -17,13 +18,14 @@ import java.util.concurrent.CompletableFuture;
 public class InvokeResponseHandler extends SimpleChannelInboundHandler<Response> {
 
     @Override
-    public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
-        log.info("channel {} has registered", ctx.channel().id());
-    }
-
-    @Override
     public void channelRead0(ChannelHandlerContext ctx, Response resp) throws Exception {
         CompletableFuture<Response> future = Constant.ID_FUTURE_MAP.get(resp.getRequestId());
         future.complete(resp);
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        cause.printStackTrace();
+        ctx.close();
     }
 }

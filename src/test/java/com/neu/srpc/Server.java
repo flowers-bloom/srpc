@@ -13,7 +13,7 @@ import com.neu.srpc.server.RpcServer;
 public class Server {
     public static void main(String[] args) {
         int port = 9000;
-        String serviceName = "compute";
+        String serviceName = "test";
         String ip = "127.0.0.1";
 
         RpcServer server = new RpcServer(port);

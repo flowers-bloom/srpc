@@ -11,6 +11,7 @@ import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.SocketAddress;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @Author XJH
@@ -35,7 +36,11 @@ public class InvokeRequestHandler extends SimpleChannelInboundHandler<Request> {
 
     @Override
     public void channelRead0(ChannelHandlerContext ctx, Request request) throws Exception {
+        log.info("client request ...");
         serverStub.process(ctx, request);
+
+//        TimeUnit.SECONDS.sleep(2);
+//        ctx.disconnect();
     }
 
     /**
@@ -53,11 +58,8 @@ public class InvokeRequestHandler extends SimpleChannelInboundHandler<Request> {
             SocketAddress remoteAddress = ctx.channel().remoteAddress();
 
 //            if (state == IdleState.READER_IDLE) {
-//                log.info("客户端 {} 读空闲", remoteAddress);
-//            }else if (state == IdleState.WRITER_IDLE) {
-//                log.info("客户端 {} 写空闲", remoteAddress);
-//            }else if (state == IdleState.ALL_IDLE) {
-//                log.info("客户端 {} 读写空闲", remoteAddress);
+//                log.info("read_idle appear, server disconnect");
+//                ctx.channel().disconnect();
 //            }
         }else {
             super.userEventTriggered(ctx, evt);

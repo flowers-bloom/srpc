@@ -10,10 +10,12 @@ import com.neu.srpc.codec.Serializer;
  */
 public class Test {
     public static void main(String[] args) {
-        String point = "123:44";
-
-        int sep = point.indexOf(':');
-        System.out.println(point.substring(sep+1));
+//        String point = "123:44";
+//
+//        int sep = point.indexOf(':');
+//        System.out.println(point.substring(sep+1));
         //this.port = Integer.parseInt(point.substring(sep+1));
+        int n = 1 << 15;
+        System.out.println(n / 1000);
     }
 }
