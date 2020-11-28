@@ -50,6 +50,12 @@ public class HelloServiceImpl implements HelloService {
 }
 ```
 
+**实现类声明**  
+在 resource 目录下创建 META-INF/services 目录，并创建以接口全限定类名为文件名的文件，文件内声明接口的实现类的全限定类名  
+
+eg：
+文件名 xjh.rpc.api.HelloService => 内容 xjh.rpc.api.impl.HelloServiceImpl  
+
 **启动服务提供者**  
 ```java
 public class Server {
