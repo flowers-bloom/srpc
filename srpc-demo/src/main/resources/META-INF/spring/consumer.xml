@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:srpc="http://xjh.srpc.core/schema/srpc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd http://xjh.srpc.core/schema/srpc http://xjh.srpc.core/schema/srpc/srpc.xsd" >
+
+    <srpc:registry address="127.0.0.1" />
+
+    <srpc:reference id="helloService" interface="HelloService" />
+</beans>

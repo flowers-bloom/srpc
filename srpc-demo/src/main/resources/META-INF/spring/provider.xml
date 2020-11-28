@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:srpc="http://xjh.srpc.core/schema/srpc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd http://xjh.srpc.core/schema/srpc http://xjh.srpc.core/schema/srpc/srpc.xsd" >
+
+    <srpc:registry id="registry" address="127.0.0.1:2181" />
+
+    <!--声明要暴露的接口-->
+    <srpc:service id="service" interface="xjh.rpc.api.HelloService" ref="helloService" />
+
+    <!--和本地 Bean 一样实现服务-->
+    <bean id="helloService" class="xjh.rpc.api.impl.HelloServiceImpl" />
+</beans>

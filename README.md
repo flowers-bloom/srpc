@@ -1,6 +1,25 @@
 # SRPC
-## 简介
-个人维护开发的一个 RPC 项目，未来将作为简历上的项目经历，希望将其扩展得完善和强大。    
+![build](https://img.shields.io/badge/build-passing-brightgreen) ![oraclejdk](https://img.shields.io/badge/oraclejdk-1.8-red) ![version](https://img.shields.io/badge/version-1.0-blue)  
+
+SRPC 是一个基于 Netty 实现网络通信，Zookeeper 实现服务暴露和发现，并实现了序列化、负载均衡、重连机制的远程调用框架。    
+
+## 特性
+1. 自定义声明报文长度的通信协议，解决粘包黏包问题  
+2. 基于 Netty 实现高性能网络通信，并增加了客户端重连的容错机制  
+3. 使用 Zookeeper 实现服务暴露和发现  
+4. 实现的序列化方式：fastjson  
+5. 实现的负载均衡算法：随机负载均衡  
+6. RPC 提供直连方式和注册中心方式  
+7. 接口抽象良好，模块耦合度低  
+
+
+## 模块
+- srpc-serialization 序列化模块  
+- srpc-transport 网络通信模块  
+- srpc-core 核心模块  
+- srpc-api 接口模块  
+- srpc-demo 示例模块  
+
 
 ## 功能
 项目开始于2020.11.01，以下是目前已实现的功能点  
@@ -10,24 +29,73 @@
 | 实现基本的 RPC 通信 | 2020.11.10 | 网络通信接口，使用 Netty 进行实现，并借助 CompletableFuture 实现线程间通信；序列化接口，使用 FastJson 进行实现；远程方法调用，使用 JDK Proxy 类实现动态代理 |
 | 实现 Netty 心跳检测及处理；实现 zookeeper 服务注册和发现，以及客户端随机负载均衡 | 2020.11.11 | 使用 Netty 自带心跳检测实现方式；在结点上注册 watcher 实现服务列表的动态更新 |  
 | 实现 Netty 断线重连 | 2020.11.13 | 实现自定义有限次数重连策略；实现重连 handler ，采用异步方式连接远程主机，但会造成初始时客户端无法主动发送消息，因为 channel 虽然实例化了，但还未连接上远程主机 |
+| 项目拆分成多个模块，实现解耦 | 2020.11.27 | 无 |
 
-## 收获
-- Netty
-    - 更深刻地理解和学会如何使用 Netty 的异步结果返回
-    - channel、pipeline、eventLoop 三者的关联，以及 pipeline 的结构和消息传递机制
-    - 能更熟练地自定义通信协议
-- Zookeeper
-    - 大致了解和学会了 watcher 使用和特点
+## 使用
+### 服务提供者
+**定义服务接口**  
+```java
+public interface HelloService {
+    String sayHello(String s);
+}
+```
 
-## 问题
-1. 断线重连中，如果使用阻塞的连接远程主机方式，即 connect().sync()，远程主机不可达且设置了连接超时时间情况下，一直得不到返回结果。  
+**在服务提供方实现接口**  
+```java
+public class HelloServiceImpl implements HelloService {
+    @Override
+    public String sayHello(String s) {
+        return "hello, " + s;
+    }
+}
+```
 
-## TODO
-正在努力开发中，以下是未来要加的一些 Feature    
+**启动服务提供者**  
+```java
+public class Server {
+    public static void main(String[] args) {
+        /*
+        1. api 直接调用
+         */
+        Endpoint endpoint = new Endpoint("127.0.0.1:9000");
+        new Provider(endpoint, true, "127.0.0.1:2181");
 
-|      Feature       |
-| :---------------:  |
-| 实现多种负载均衡策略 |
-| 实现 RPC 调用监控器 Monitor |
-| 实现链路跟踪和限流 |
-| 实现同步和异步调用方式 |
+        /*
+        2. xml 配置文件调用
+         */
+
+//        ClassPathXmlApplicationContext context =
+//                new ClassPathXmlApplicationContext("META-INF/spring/provider.xml");
+//        context.start();
+    }
+}
+```
+
+### 服务消费者
+**调用远程服务**  
+```java
+public class Client {
+
+    public static void main(String[] args) {
+        /*
+        1. api 直接调用
+         */
+        Consumer consumer = new Consumer("127.0.0.1:2181");
+
+        HelloService helloService = consumer.getProxy(HelloService.class);
+        String hello = helloService.sayHello("i am consumer.");
+        System.out.println(hello);
+
+        /*
+        2. xml 配置文件调用 暂无法使用
+         */
+//        ClassPathXmlApplicationContext context =
+//                new ClassPathXmlApplicationContext("consumer.xml");
+//        context.start();
+//
+//        HelloService helloService = (HelloService) context.getBean("helloService");
+//        String hello = helloService.sayHello("i am consumer");
+//        System.out.println(hello);
+    }
+}
+```

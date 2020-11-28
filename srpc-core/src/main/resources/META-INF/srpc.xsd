@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns="http://xjh.srpc.core/schema/srpc"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://xjh.srpc.core/schema/srpc"
+            elementFormDefault="qualified">
+
+    <!--注册中心-->
+    <xsd:element name="registry">
+        <xsd:complexType>
+            <xsd:attribute name="id" type="xsd:string" />
+            <xsd:attribute name="address" type="xsd:string" />
+        </xsd:complexType>
+    </xsd:element>
+
+    <!--接口服务-->
+    <xsd:element name="service">
+        <xsd:complexType>
+            <xsd:attribute name="id" type="xsd:string" />
+            <xsd:attribute name="interface" type="xsd:string" />
+            <xsd:attribute name="ref" type="xsd:string" />
+        </xsd:complexType>
+    </xsd:element>
+
+    <!--引用-->
+    <xsd:element name="reference">
+        <xsd:complexType>
+            <xsd:attribute name="id" type="xsd:string" />
+            <xsd:attribute name="interface" type="xsd:string" />
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

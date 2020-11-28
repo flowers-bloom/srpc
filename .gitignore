@@ -1,2 +1,7 @@
 /.idea
 /target/**
+/srpc-serialization/target/**
+/srpc-transport/target/**
+/srpc-core/target/**
+/srpc-api/target/**
+/srpc-demo/target/**
