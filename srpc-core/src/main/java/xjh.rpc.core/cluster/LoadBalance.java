@@ -2,6 +2,7 @@ package xjh.rpc.core.cluster;
 
 import xjh.rpc.transport.common.Endpoint;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -9,13 +10,19 @@ import java.util.List;
  * @Date 2020/11/07
  * @Description
  */
-public abstract class LoadBalance {
-    public static List<Endpoint> SERVICE_LIST;
+public interface LoadBalance {
 
     /**
      * 以特定算法选出一个端点 Endpoint
      *
+     * @param objects
      * @return
      */
-    public abstract Endpoint select();
+    Endpoint select(Object... objects);
+
+    /**
+     * 推送消息给订阅者
+     * @param list
+     */
+    void push(List<String> list);
 }

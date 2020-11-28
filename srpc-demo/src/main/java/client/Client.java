@@ -1,6 +1,8 @@
 package client;
 
 import xjh.rpc.api.HelloService;
+import xjh.rpc.core.cluster.ConsistentHashLoadBalance;
+import xjh.rpc.core.cluster.WeightedRandomLoadBalance;
 import xjh.rpc.core.consumer.Consumer;
 
 /**
@@ -14,7 +16,11 @@ public class Client {
         /*
         1. api 直接调用
          */
-        Consumer consumer = new Consumer("127.0.0.1:2181");
+        Consumer consumer = new Consumer();
+        consumer.registry("127.0.0.1:2181")
+                .name("test1")
+                .loadBalance(new ConsistentHashLoadBalance())
+                .build();
 
         HelloService helloService = consumer.getProxy(HelloService.class);
         String hello = helloService.sayHello("i am consumer.");

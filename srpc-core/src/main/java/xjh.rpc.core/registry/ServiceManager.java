@@ -7,7 +7,9 @@ import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.Stat;
 import xjh.rpc.core.cluster.LoadBalance;
+import xjh.rpc.core.cluster.WeightedRandomLoadBalance;
 import xjh.rpc.core.common.Constant;
+import xjh.rpc.core.util.ZkUtil;
 import xjh.rpc.transport.common.Endpoint;
 
 import java.io.IOException;
@@ -26,13 +28,15 @@ public class ServiceManager {
     private String address;
     private final String ROOT_SERVICE = Constant.ZK_ROOT_SERVICE;
     private final int SESSION_TIMEOUT = Constant.ZK_SESSION_TIMEOUT;
+    private static List<String> serviceList;
+    private LoadBalance loadBalance;
     private ZooKeeper zooKeeper;
 
     public ServiceManager(String address) {
         this.address = address;
 
         try {
-            zooKeeper = new ZooKeeper(address, SESSION_TIMEOUT, watchedEvent -> { });
+            zooKeeper = new ZooKeeper(address, SESSION_TIMEOUT, watchedEvent -> {});
 
             Stat exists = zooKeeper.exists(ROOT_SERVICE, false);
             if (exists == null) {
@@ -43,22 +47,28 @@ public class ServiceManager {
         }
     }
 
+    public ServiceManager(String address, LoadBalance loadBalance) {
+        this(address);
+        this.loadBalance = loadBalance;
+    }
+
     /**
      * 注册服务
      *
-     * @param serviceName 服务名
+     * @param serviceName
+     * @param info
      */
-    public void register(String serviceName) {
+    public void register(String serviceName, String info) {
         try {
             String path = ROOT_SERVICE + "/" + serviceName;
 
-            Stat exists1 = zooKeeper.exists(path, false);
-            if (exists1 == null) {
-                zooKeeper.create(path, address.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-                log.info("服务 {} 注册成功, 地址 {}", serviceName, address);
-            }else {
-                log.info("服务 {} 已注册, 地址 {}", serviceName, address);
+            Stat exists = zooKeeper.exists(path, false);
+            if (exists != null) {
+                ZkUtil.clearNodes(zooKeeper, path);
             }
+
+            zooKeeper.create(path, info.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+            log.info("服务 {} 注册成功, info = {}", serviceName, info);
         } catch (InterruptedException | KeeperException e) {
             throw new RuntimeException(e);
         }
@@ -77,7 +87,7 @@ public class ServiceManager {
      * @param path
      */
     public void updateServiceList(String path) {
-        List<Endpoint> list = Collections.synchronizedList(new ArrayList<>());
+        List<String> list = Collections.synchronizedList(new ArrayList<>());
 
         try {
             List<String> children = zooKeeper.getChildren(path,
@@ -86,16 +96,18 @@ public class ServiceManager {
 
             for (String child : children) {
                 byte[] data = zooKeeper.getData(path + "/" + child, false, null);
-                list.add(new Endpoint(new String(data, "utf-8")));
+                list.add(new String(data, "utf-8"));
             }
 
-            LoadBalance.SERVICE_LIST = list;
+            updateServiceList(list);
+            log.info("serviceList = {}", serviceList);
         } catch (InterruptedException | KeeperException | UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public ZooKeeper getZooKeeper() {
-        return zooKeeper;
+    private void updateServiceList(List<String> list) {
+        serviceList = list;
+        loadBalance.push(serviceList);
     }
 }

@@ -3,10 +3,13 @@ package xjh.rpc.core.consumer;
 import lombok.extern.slf4j.Slf4j;
 import xjh.rpc.core.cluster.LoadBalance;
 import xjh.rpc.core.cluster.RandomLoadBalance;
+import xjh.rpc.core.cluster.WeightedRandomLoadBalance;
 import xjh.rpc.core.common.Constant;
 import xjh.rpc.core.common.SyncFuture;
 import xjh.rpc.core.registry.ServiceManager;
 import xjh.rpc.serialization.Serialization;
+import xjh.rpc.serialization.impl.fastjson.FastJsonImpl;
+import xjh.rpc.transport.client.LimitedCountRetryPolicy;
 import xjh.rpc.transport.client.NettyClient;
 import xjh.rpc.transport.client.RetryPolicy;
 import xjh.rpc.transport.common.Endpoint;
@@ -25,44 +28,93 @@ import java.lang.reflect.Proxy;
 @Slf4j
 public class Consumer {
     private NettyClient client;
+    private Endpoint remoteAddress;
+    private String name;
+    private Serialization serialization;
+    private RetryPolicy retryPolicy;
+    private String registry;
     private ServiceManager serviceManager;
+    private LoadBalance loadBalance;
 
-    /**
-     * 注册中心方式
-     *
-     * @param registryAddress
-     */
-    public Consumer(String registryAddress) {
-        this.serviceManager = new ServiceManager(registryAddress);
-        client = new NettyClient(select(), new ResponseHandler());
+    public Consumer self() {
+        return this;
     }
 
-    /**
-     * 直连方式
-     *
-     * @param endpoint
-     */
-    public Consumer(Endpoint endpoint) {
-        client = new NettyClient(endpoint, new ResponseHandler());
+    public Consumer remoteAddress(Endpoint remoteAddress) {
+        this.remoteAddress = remoteAddress;
+        return self();
     }
 
-    public Consumer(Endpoint endpoint, Serialization serialization) {
-        client = new NettyClient(endpoint, new ResponseHandler(), serialization);
+    public Consumer name(String name) {
+        this.name = name;
+        return self();
     }
 
-    public Consumer(Endpoint endpoint, Serialization serialization, RetryPolicy retryPolicy) {
-        client = new NettyClient(endpoint, new ResponseHandler(), serialization, retryPolicy);
+    public Consumer serialization(Serialization serialization) {
+        this.serialization = serialization;
+        return self();
+    }
+
+    public Consumer retryPolicy(RetryPolicy retryPolicy) {
+        this.retryPolicy = retryPolicy;
+        return self();
+    }
+
+    public Consumer registry(String registry) {
+        this.registry = registry;
+        return self();
+    }
+
+    public Consumer loadBalance(LoadBalance loadBalance) {
+        this.loadBalance = loadBalance;
+        return self();
+    }
+
+    public void build() {
+        /*
+        配置注册中心，以及负载均衡方式
+         */
+        if (registry != null && !"".equals(registry)) {
+            if (loadBalance == null) {
+                loadBalance = new RandomLoadBalance();
+            }
+
+            this.serviceManager = new ServiceManager(registry, loadBalance);
+
+            /*
+            获取服务提供者
+             */
+            this.remoteAddress = select();
+        }
+
+        /*
+        配置 Netty Client
+         */
+        if (remoteAddress == null) {
+            throw new IllegalStateException("consumer address is null");
+        }
+
+        if (serialization == null) {
+            serialization = new FastJsonImpl();
+        }
+
+        if (retryPolicy == null) {
+            retryPolicy = new LimitedCountRetryPolicy(5);
+        }
+
+        client = new NettyClient(remoteAddress, new ResponseHandler(), serialization, retryPolicy);
     }
 
     /**
      * 从注册中心获取服务列表，并随机选取一个端点初始化 ip、port
      */
     private Endpoint select() {
-        serviceManager.discover();
-        log.info("service points are {}", LoadBalance.SERVICE_LIST);
+        if (name == null) {
+            name = "test";
+        }
 
-        LoadBalance loadBalance = new RandomLoadBalance();
-        return loadBalance.select();
+        serviceManager.discover();
+        return loadBalance.select(name);
     }
 
     /**

@@ -32,6 +32,5 @@ public class ReferenceBean implements ApplicationContextAware, ApplicationListen
 
     private void refer() {
         RegistryConfig registryConfig = (RegistryConfig) context.getBean("registry");
-        new Consumer(registryConfig.getAddress());
     }
 }

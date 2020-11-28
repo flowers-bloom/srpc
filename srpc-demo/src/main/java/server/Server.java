@@ -14,8 +14,14 @@ public class Server {
         /*
         1. api 直接调用
          */
-        Endpoint endpoint = new Endpoint("127.0.0.1:9000");
-        new Provider(endpoint, true, "127.0.0.1:2181");
+        Endpoint endpoint = new Endpoint("127.0.0.1:9004");
+
+        Provider provider = new Provider();
+        provider.address(endpoint)
+                .serviceName("test4")
+                .weight(6)
+                .registry("127.0.0.1:2181")
+                .build();
 
         /*
         2. xml 配置文件调用

@@ -30,8 +30,13 @@ public class ServiceBean implements ApplicationListener<ContextRefreshedEvent>, 
 
     private void export() {
         RegistryConfig registryConfig = (RegistryConfig) context.getBean("registry");
-        new Provider(new Endpoint("127.0.0.1:9000"), true,
-                registryConfig.getAddress());
+
+        Provider provider = new Provider();
+        provider.address(new Endpoint("127.0.0.1:9000"))
+                .serviceName("test")
+                .weight(2)
+                .registry(registryConfig.getAddress())
+                .build();
     }
 
     @Override
