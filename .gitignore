@@ -1,5 +1,6 @@
 /.idea
 /target/**
+/srpc-common/target/**
 /srpc-serialization/target/**
 /srpc-transport/target/**
 /srpc-core/target/**

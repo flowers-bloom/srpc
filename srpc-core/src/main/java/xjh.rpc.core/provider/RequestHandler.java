@@ -1,15 +1,13 @@
 package xjh.rpc.core.provider;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.util.internal.ObjectUtil;
 import lombok.extern.slf4j.Slf4j;
+import xjh.rpc.common.spi.ExtensionLoader;
 import xjh.rpc.transport.handler.AbstractRequestHandler;
 import xjh.rpc.transport.protocol.Request;
 import xjh.rpc.transport.protocol.Response;
 
 import java.lang.reflect.Method;
-import java.util.Iterator;
-import java.util.ServiceLoader;
 
 /**
  * @Author XJH
@@ -28,16 +26,8 @@ public class RequestHandler extends AbstractRequestHandler {
     @SuppressWarnings("unchecked")
     @Override
     public void process(ChannelHandlerContext ctx, Request request) {
-        ServiceLoader serviceLoader = ServiceLoader.load(request.getInterfaceClazz());
-        Iterator iterator = serviceLoader.iterator();
-        if (!iterator.hasNext()) {
-            log.error("接口 {} 实现类未声明", request.getInterfaceClazz());
-            throw new RuntimeException("iterator not has next");
-        }
-
-        // 接口实现类对象
-        Object instance = iterator.next();
-        ObjectUtil.checkNotNull(instance, "instance");
+        ExtensionLoader loader = ExtensionLoader.load(request.getInterfaceClazz());
+        Object instance = loader.getExtension();
 
         try {
             Method method = instance.getClass().getMethod(request.getMethodName(), request.getParameterTypes());

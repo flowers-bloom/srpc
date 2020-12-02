@@ -17,6 +17,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="srpc-api" />
+    <orderEntry type="module" module-name="srpc-common" />
     <orderEntry type="module" module-name="srpc-core" />
     <orderEntry type="module" module-name="srpc-transport" />
     <orderEntry type="module" module-name="srpc-serialization" />

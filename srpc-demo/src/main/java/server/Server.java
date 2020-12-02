@@ -1,7 +1,6 @@
 package server;
 
 
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 import xjh.rpc.core.provider.Provider;
 import xjh.rpc.transport.common.Endpoint;
 
@@ -20,7 +19,7 @@ public class Server {
         provider.address(endpoint)
                 .serviceName("test4")
                 .weight(6)
-                .registry("127.0.0.1:2181")
+                //.registry("127.0.0.1:2181")
                 .build();
 
         /*

@@ -15,12 +15,16 @@ import xjh.rpc.transport.codec.Packet;
 @EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
 @NoArgsConstructor
-public class Request extends Packet {
+public class Request<T> extends Packet {
     private long id;
-    private Class interfaceClazz;
+    private Class<T> interfaceClazz;
     private String methodName;
     private Class[] parameterTypes;
     private Object[] parameters;
+
+    public Class<T> getInterfaceClazz() {
+        return interfaceClazz;
+    }
 
     @Override
     public Class<? extends Packet> getClazz() {

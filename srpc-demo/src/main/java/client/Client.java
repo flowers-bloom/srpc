@@ -2,8 +2,8 @@ package client;
 
 import xjh.rpc.api.HelloService;
 import xjh.rpc.core.cluster.ConsistentHashLoadBalance;
-import xjh.rpc.core.cluster.WeightedRandomLoadBalance;
 import xjh.rpc.core.consumer.Consumer;
+import xjh.rpc.transport.common.Endpoint;
 
 /**
  * @Author XJH
@@ -17,7 +17,10 @@ public class Client {
         1. api 直接调用
          */
         Consumer consumer = new Consumer();
-        consumer.registry("127.0.0.1:2181")
+        Endpoint remoteAddress = new Endpoint("127.0.0.1:9004");
+
+        consumer//.registry("127.0.0.1:2181")
+                .remoteAddress(remoteAddress)
                 .name("test1")
                 .loadBalance(new ConsistentHashLoadBalance())
                 .build();

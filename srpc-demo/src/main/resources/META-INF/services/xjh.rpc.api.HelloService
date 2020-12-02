@@ -1,1 +1,2 @@
-xjh.rpc.api.impl.HelloServiceImpl
+hello = xjh.rpc.api.impl.HelloServiceImpl
+hi = xjh.rpc.api.impl.HelloServiceImpl2
