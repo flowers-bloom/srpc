@@ -1,6 +1,6 @@
 package test;
 
-import xjh.rpc.api.HelloService;
+import xjh.rpc.api.GreetService;
 import xjh.rpc.common.spi.ExtensionLoader;
 
 /**
@@ -9,9 +9,9 @@ import xjh.rpc.common.spi.ExtensionLoader;
  */
 public class Test {
     public static void main(String[] args) {
-        ExtensionLoader<HelloService> loader = ExtensionLoader.load(HelloService.class);
-        HelloService helloService = loader.getExtension("hi");
-        String hello = helloService.sayHello("ExtensionLoader");
+        ExtensionLoader<GreetService> loader = ExtensionLoader.load(GreetService.class);
+        GreetService greetService = loader.getExtension("hi");
+        String hello = greetService.sayHello("ExtensionLoader");
         System.out.println(hello);
     }
 }

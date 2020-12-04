@@ -7,8 +7,8 @@
     <srpc:registry id="registry" address="127.0.0.1:2181" />
 
     <!--声明要暴露的接口-->
-    <srpc:service id="service" interface="xjh.rpc.api.HelloService" ref="helloService" />
+    <srpc:service id="service" interface="xjh.rpc.api.GreetService" ref="greetService" />
 
     <!--和本地 Bean 一样实现服务-->
-    <bean id="helloService" class="xjh.rpc.api.impl.HelloServiceImpl" />
+    <bean id="greetService" class="xjh.rpc.api.impl.HelloServiceImpl" />
 </beans>

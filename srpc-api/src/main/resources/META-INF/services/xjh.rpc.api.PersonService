@@ -1,0 +1,3 @@
+man = xjh.rpc.api.impl.ManServiceImpl
+woman = xjh.rpc.api.impl.WomanServiceImpl
+xjh.rpc.api.wrapper.PersonWrapper1

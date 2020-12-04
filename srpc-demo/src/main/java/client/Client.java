@@ -1,6 +1,7 @@
 package client;
 
-import xjh.rpc.api.HelloService;
+import xjh.rpc.api.GreetService;
+import xjh.rpc.api.PersonService;
 import xjh.rpc.core.cluster.ConsistentHashLoadBalance;
 import xjh.rpc.core.consumer.Consumer;
 import xjh.rpc.transport.common.Endpoint;
@@ -25,9 +26,11 @@ public class Client {
                 .loadBalance(new ConsistentHashLoadBalance())
                 .build();
 
-        HelloService helloService = consumer.getProxy(HelloService.class);
-        String hello = helloService.sayHello("i am consumer.");
-        System.out.println(hello);
+        GreetService greetService = consumer.getProxy(GreetService.class);
+        System.out.println(greetService.sayHello("greetService"));
+
+        PersonService personService = consumer.getProxy(PersonService.class);
+        personService.say();
 
         /*
         2. xml 配置文件调用 暂无法使用
@@ -36,8 +39,8 @@ public class Client {
 //                new ClassPathXmlApplicationContext("consumer.xml");
 //        context.start();
 //
-//        HelloService helloService = (HelloService) context.getBean("helloService");
-//        String hello = helloService.sayHello("i am consumer");
+//        GreetService greetService = (GreetService) context.getBean("greetService");
+//        String hello = greetService.sayHello("i am consumer");
 //        System.out.println(hello);
     }
 }

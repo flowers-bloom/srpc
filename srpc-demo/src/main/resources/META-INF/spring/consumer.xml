@@ -6,5 +6,5 @@
 
     <srpc:registry address="127.0.0.1" />
 
-    <srpc:reference id="helloService" interface="HelloService" />
+    <srpc:reference id="greetService" interface="HelloService" />
 </beans>

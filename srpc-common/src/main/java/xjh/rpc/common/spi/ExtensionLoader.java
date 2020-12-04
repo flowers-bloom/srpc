@@ -4,9 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -20,18 +24,28 @@ public class ExtensionLoader<T> {
     private static final String PREFIX = "META-INF/services/";
     /**
      * 实现类加载器缓存
+     * eg: clazz => clazzLoader
      */
     private static final Map<Class<?>, ExtensionLoader<?>> CACHE_EXTENSION_LOADER
             = new ConcurrentHashMap<>();
     /**
      * 接口信息缓存
+     * eg: xjh.rpc.xxx.yyyInterface => (hello => xjh.rpc.xxx.yyyImpl)
      */
     private static final Map<String, Map<String, String>> CACHE_INTERFACE
             = new ConcurrentHashMap<>();
     /**
      * 实现类实例缓存
+     * eg: hello => instance
      */
     private static final Map<String, Object> CACHE_EXTENSION
+            = new ConcurrentHashMap<>();
+
+    /**
+     * 缓存包装类
+     * eg: xjh.rpc.xxx.yyyInterface => [xjh.rpc.xxx.aaaWrapper, xjh.rpc.xxx.bbbWrapper, ...]
+     */
+    private static final Map<String, Set<String>> CACHE_WRAPPER
             = new ConcurrentHashMap<>();
 
     private Class<T> clazz;
@@ -111,11 +125,14 @@ public class ExtensionLoader<T> {
             extension = map.get(this.name);
         }else {
             map = new ConcurrentHashMap<>();
+            Set<String> wrapperSet = new HashSet<>();
+
             String classpath = PREFIX + this.clazz.getName();
             URL resource = this.classLoader.getResource(classpath);
 
             String absolutePath = resource.getFile();
             Objects.requireNonNull(absolutePath, absolutePath + " cannot be null");
+            log.info("resource file's absolutePath = {}", absolutePath);
 
             try {
                 BufferedReader reader = new BufferedReader(new FileReader(absolutePath));
@@ -123,33 +140,49 @@ public class ExtensionLoader<T> {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     int sep = line.indexOf('=');
-                    if (sep == -1) {
-                        throw new RuntimeException("file format required = as the sep");
+                    if (sep == -1 && !line.endsWith("Wrapper")) {
+                        throw new RuntimeException(line + " format error");
                     }
 
-                    String id = line.substring(0, sep).trim();
-                    String className = line.substring(sep+1).trim();
+                    if (sep == -1 || line.endsWith("Wrapper")) {
+                        /*
+                        wrapper class
+                         */
+                        if (sep != -1) {
+                            line = line.substring(sep+1).trim();
+                        }
 
-                    log.info("loadInterface = {}, {}", id, className);
+                        log.info("load wrapper = {}", line);
+                        wrapperSet.add(line.trim());
+                    }else {
+                        /*
+                        ordinary class
+                         */
+                        String id = line.substring(0, sep).trim();
+                        String className = line.substring(sep+1).trim();
 
-                    boolean exist = isClassExist(className);
-                    if (!exist) {
-                        throw new Exception(className + " cannot exist");
+                        log.info("load interface = {}, {}", id, className);
+
+                        boolean exist = isClassExist(className);
+                        if (!exist) {
+                            throw new Exception(className + " cannot exist");
+                        }
+
+                        String value = map.get(id);
+                        if (value != null) {
+                            throw new RuntimeException(id + " is repetitive");
+                        }
+
+                        if (id.equals(this.name)) {
+                            extension = className;
+                        }
+
+                        map.put(id, className);
                     }
-
-                    String value = map.get(id);
-                    if (value != null) {
-                        throw new RuntimeException(id + " is repetitive");
-                    }
-
-                    if (id.equals(this.name)) {
-                        extension = className;
-                    }
-
-                    map.put(id, className);
                 }
 
                 CACHE_INTERFACE.put(this.clazz.getName(), map);
+                CACHE_WRAPPER.put(this.clazz.getName(), wrapperSet);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -164,12 +197,69 @@ public class ExtensionLoader<T> {
         }
 
         try {
-            Class<?> clazz = Class.forName(extension);
-            Object instance = clazz.newInstance();
+            Class<?> extensionClass = Class.forName(extension);
+            Object instance = extensionClass.newInstance();
+            log.info("{} , object hashcode = {}", extensionClass, instance.hashCode());
+
+            dependencyInject(extensionClass, instance);
+
+            /*
+            包装类
+             */
+            Set<String> cacheWrapperSet = CACHE_WRAPPER.get(this.clazz.getName());
+            if (cacheWrapperSet != null && !cacheWrapperSet.isEmpty()) {
+                for (String wrapper : cacheWrapperSet) {
+                    Class<?> wrapperClass = Class.forName(wrapper);
+
+                    if (isWrapperClass(wrapperClass, extensionClass)) {
+                        log.info("before wrap class, wrapperClass = {}", wrapperClass.getName());
+
+                        instance = dependencyInject(wrapperClass,
+                                wrapperClass.getConstructor(extensionClass)
+                                        .newInstance(instance));
+
+                        log.info("after wrap class, instance hashcode = {}", instance.hashCode());
+                    }else {
+                        log.info("{} is not {}'s wrapperClass", wrapperClass, extensionClass);
+                    }
+                }
+            }else {
+                log.info("cacheWrapperSet is null or isEmpty");
+            }
 
             CACHE_EXTENSION.put(this.name, instance);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private Object dependencyInject(Class<?> clazz, Object instance) {
+        Method[] methods = clazz.getDeclaredMethods();
+
+        for (Method method : methods) {
+            if (method.getName().startsWith("set") &&
+                    Modifier.isPublic(method.getModifiers()) &&
+                    method.getParameterCount() == 1) {
+                Class<?> parameterClazz = method.getParameterTypes()[0];
+
+                try {
+                    Object parameter = new ExtensionLoader<>(parameterClazz).getExtension();
+                    method.invoke(instance, parameter);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return instance;
+    }
+
+    private boolean isWrapperClass(Class<?> wrapperClass, Class<?> extensionClass) {
+        try {
+            wrapperClass.getConstructor(extensionClass);
+            return true;
+        } catch (NoSuchMethodException e) {
+            return false;
         }
     }
 

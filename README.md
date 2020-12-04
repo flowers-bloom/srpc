@@ -10,7 +10,7 @@ SRPC 是一个基于 Netty 实现网络通信，Zookeeper 实现服务暴露和�
 4. 实现的序列化方式：fastjson、hessian、kryo   
 5. 实现的负载均衡算法：随机负载均衡、加权随机负载均衡、一致性哈希负载均衡   
 6. RPC 提供直连方式和注册中心方式  
-7. 自定义实现 ExtensionLoader 代替 JDK ServiceLoader 方式来加载实现类  
+7. 自定义 SPI 注解，实现 ExtensionLoader 代替 JDK ServiceLoader 方式来加载实现类，并实现依赖注入    
 8. 接口抽象良好，模块耦合度低  
 
 
@@ -34,6 +34,7 @@ SRPC 是一个基于 Netty 实现网络通信，Zookeeper 实现服务暴露和�
 | 项目拆分成多个模块，实现解耦 | 2020.11.27 | 无 |
 | 新增 hessian、kryo 序列化方式；新增加权随机、一致性哈希负载均衡算法；provider 和 consumer 使用建造者方式创建 | 2020.11.28 | 无 |
 | 新增 SPI 注解声明默认实现类，采用 ExtensionLoader 的方式加载实现类 | 2020.12.2 | 借鉴 Dubbo SPI 设计 |
+| 新增加载扩展类时依赖注入和对类进行包装 | 2020.12.4 | 无 |
 
 ## 使用
 ### 服务提供者
@@ -57,9 +58,9 @@ public class HelloServiceImpl implements HelloService {
 **3. 实现类声明**  
 在 resource 目录下创建 META-INF/services 目录，并创建以接口全限定类名为文件名的文件，文件内声明标识和实现类名的映射   
 
-eg：文件名 xjh.rpc.api.HelloService   
+eg：文件名 xjh.rpc.api.GreetService   
 hello = xjh.rpc.api.impl.HelloServiceImpl  
-hi = xjh.rpc.api.impl.HelloServiceImpl2  
+hi = xjh.rpc.api.impl.HiServiceImpl  
 
 **4. 启动服务提供者**  
 ```java
@@ -106,8 +107,8 @@ public class Client {
                 .loadBalance(new ConsistentHashLoadBalance())
                 .build();
 
-        HelloService helloService = consumer.getProxy(HelloService.class);
-        String hello = helloService.sayHello("i am consumer.");
+        HelloService greetService = consumer.getProxy(HelloService.class);
+        String hello = greetService.sayHello("i am consumer.");
         System.out.println(hello);
 
         /*
@@ -117,8 +118,8 @@ public class Client {
 //                new ClassPathXmlApplicationContext("consumer.xml");
 //        context.start();
 //
-//        HelloService helloService = (HelloService) context.getBean("helloService");
-//        String hello = helloService.sayHello("i am consumer");
+//        HelloService greetService = (HelloService) context.getBean("greetService");
+//        String hello = greetService.sayHello("i am consumer");
 //        System.out.println(hello);
     }
 }
